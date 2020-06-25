@@ -1,23 +1,25 @@
-const properties = require('./json/properties.json');
-const users = require('./json/users.json');
-
 const { Pool } = require('pg');
 
 const pool = new Pool({
   host: 'localhost',
   database: 'lightbnb',
+  user: 'vagrant',
   password: '123'
 });
+
+const properties = require('./json/properties.json');
+const users = require('./json/users.json');
 
 /// Users
 
 const getAllProperties = function(options, limit = 10) {
   return pool.query(`
-  SELECT * FROM properties
+  SELECT * 
+  FROM properties
   LIMIT $1
   `, [limit])
   .then(res => 
-    res.rows);
+    res.rows)
 }
 exports.getAllProperties = getAllProperties;
 
@@ -27,18 +29,24 @@ exports.getAllProperties = getAllProperties;
  * @return {Promise<{}>} A promise to the user.
  */
 const getUserWithEmail = function(email) {
-  let user;
-  for (const userId in users) {
-    user = users[userId];
-    if (user.email.toLowerCase() === email.toLowerCase()) {
-      break;
-    } else {
-      user = null;
-    }
+  const values = [email];
+  const queryString = 'SELECT id, name, email, password  FROM users WHERE email = $1';
+  return pool.query(queryString, values)
+    .then((res) => {
+      console.log(res.rows[0])
+      return res.rows[0];
+    });
+
+  // return pool.query(`
+  // SELECT * 
+  // FROM users
+  // WHERE email LIKE $1
+  // `, [email])
+  // .then(res => {
+  //   console.log(res.rows[0])
+  // })
   }
-  return Promise.resolve(user);
-}
-exports.getUserWithEmail = getUserWithEmail;
+  exports.getUserWithEmail = getUserWithEmail;
 
 /**
  * Get a single user from the database given their id.
@@ -46,7 +54,13 @@ exports.getUserWithEmail = getUserWithEmail;
  * @return {Promise<{}>} A promise to the user.
  */
 const getUserWithId = function(id) {
-  return Promise.resolve(users[id]);
+  const values = [id];
+  const queryString = 'SELECT id, name, email, password FROM users WHERE id = $1';
+  return pool.query(queryString, values)
+    .then((res) => {
+      // console.log(res.rows[0])
+      return res.rows[0];
+    });
 }
 exports.getUserWithId = getUserWithId;
 
@@ -84,15 +98,6 @@ exports.getAllReservations = getAllReservations;
  * @param {*} limit The number of results to return.
  * @return {Promise<[{}]>}  A promise to the properties.
  */
-
-// const getAllProperties = function(options, limit = 10) {
-//   const limitedProperties = {};
-//   for (let i = 1; i <= limit; i++) {
-//     limitedProperties[i] = properties[i];
-//   }
-//   return Promise.resolve(limitedProperties);
-// }
-// exports.getAllProperties = getAllProperties;
 
 
 /**
