@@ -33,18 +33,9 @@ const getUserWithEmail = function(email) {
   const queryString = 'SELECT id, name, email, password  FROM users WHERE email = $1';
   return pool.query(queryString, values)
     .then((res) => {
-      console.log(res.rows[0])
+      // console.log("res.rows[0]", res.rows[0])
       return res.rows[0];
     });
-
-  // return pool.query(`
-  // SELECT * 
-  // FROM users
-  // WHERE email LIKE $1
-  // `, [email])
-  // .then(res => {
-  //   console.log(res.rows[0])
-  // })
   }
   exports.getUserWithEmail = getUserWithEmail;
 
@@ -58,7 +49,7 @@ const getUserWithId = function(id) {
   const queryString = 'SELECT id, name, email, password FROM users WHERE id = $1';
   return pool.query(queryString, values)
     .then((res) => {
-      // console.log(res.rows[0])
+      // console.log("res.rows[0]", res.rows[0])
       return res.rows[0];
     });
 }
@@ -71,11 +62,16 @@ exports.getUserWithId = getUserWithId;
  * @return {Promise<{}>} A promise to the user.
  */
 const addUser =  function(user) {
-  const userId = Object.keys(users).length + 1;
-  user.id = userId;
-  users[userId] = user;
-  return Promise.resolve(user);
-}
+  return pool.query(`
+  INSERT INTO users(name, email, password)
+  VALUES($1, $2, $3)
+  RETURNING *
+  `, [user.name, user.email, user.password])
+      .then(res => {
+        // console.log("res.rows[0]", res.rows[0]);
+        return res.rows[0];
+      });
+};
 exports.addUser = addUser;
 
 /// Reservations
